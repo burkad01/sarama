@@ -502,7 +502,11 @@ func (client *client) Coordinator(consumerGroup string) (*Broker, error) {
 		return nil, ErrConsumerCoordinatorNotAvailable
 	}
 
-	_ = coordinator.Open(client.conf)
+	Logger.Printf("[temp-debug] opening connection to coordinator")
+	e := coordinator.Open(client.conf)
+	if e != nil {
+		Logger.Printf("[temp-debug] error opening connection to coordinator: %v", e)
+	}
 	return coordinator, nil
 }
 

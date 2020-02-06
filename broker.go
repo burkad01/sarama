@@ -158,6 +158,7 @@ func (b *Broker) Open(conf *Config) error {
 		}
 
 		if conf.Net.TLS.Enable {
+			Logger.Printf("[temp-debug] connecting with dialer: timeout=%v, keepAlive=%v, localAddr=%v", conf.Net.DialTimeout, conf.Net.KeepAlive, conf.Net.LocalAddr)
 			b.conn, b.connErr = tls.DialWithDialer(&dialer, "tcp", b.addr, conf.Net.TLS.Config)
 		} else if conf.Net.Proxy.Enable {
 			b.conn, b.connErr = conf.Net.Proxy.Dialer.Dial("tcp", b.addr)
