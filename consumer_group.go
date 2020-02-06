@@ -161,15 +161,19 @@ func (c *consumerGroup) Consume(ctx context.Context, topics []string, handler Co
 	}
 
 	// Refresh metadata for requested topics
+	Logger.Println("[temp-debug] consumerGroup.Consume - refreshing metadata")
 	if err := c.client.RefreshMetadata(topics...); err != nil {
+		Logger.Printf("[temp-debug] consumerGroup.Consume - error refreshing metadata: %v", err)
 		return err
 	}
 
 	// Init session
+	Logger.Println("[temp-debug] consumerGroup.Consume - initializing session")
 	sess, err := c.newSession(ctx, topics, handler, c.config.Consumer.Group.Rebalance.Retry.Max)
 	if err == ErrClosedClient {
 		return ErrClosedConsumerGroup
 	} else if err != nil {
+		Logger.Println("[temp-debug] consumerGroup.Consume - error initializing session: %v", err)
 		return err
 	}
 
@@ -202,81 +206,100 @@ func (c *consumerGroup) retryNewSession(ctx context.Context, topics []string, ha
 }
 
 func (c *consumerGroup) newSession(ctx context.Context, topics []string, handler ConsumerGroupHandler, retries int) (*consumerGroupSession, error) {
+	Logger.Println("[temp-debug] consumerGroup.newSession - calling client.Coordinator")
 	coordinator, err := c.client.Coordinator(c.groupID)
 	if err != nil {
 		if retries <= 0 {
 			return nil, err
 		}
-
+		Logger.Printf("[temp-debug] consumerGroup.newSession - error from coordinator call %v - retrying [%v]", err, retries)
 		return c.retryNewSession(ctx, topics, handler, retries, true)
 	}
 
 	// Join consumer group
+	Logger.Println("[temp-debug] consumerGroup.newSession - sending join group request")
 	join, err := c.joinGroupRequest(coordinator, topics)
 	if err != nil {
-		_ = coordinator.Close()
+		Logger.Printf("[temp-debug] consumerGroup.newSession - error from join group request: %v. closing coordinator", err)
+		e := coordinator.Close()
+		Logger.Printf("[temp-debug] consumerGroup.newSession - error closing coordinator: %v", e)
 		return nil, err
 	}
 	switch join.Err {
 	case ErrNoError:
 		c.memberID = join.MemberId
+		Logger.Printf("[temp-debug] consumerGroup.newSession - no error joining group. memberId=%v", join.MemberId)
 	case ErrUnknownMemberId, ErrIllegalGeneration: // reset member ID and retry immediately
 		c.memberID = ""
+		Logger.Printf("[temp-debug] consumerGroup.newSession - ErrUnknownMemberId or ErrIllegalGeneration joining group. KError=%v", join.Err)
 		return c.newSession(ctx, topics, handler, retries)
 	case ErrNotCoordinatorForConsumer: // retry after backoff with coordinator refresh
 		if retries <= 0 {
 			return nil, join.Err
 		}
-
+		Logger.Printf("[temp-debug] consumerGroup.newSession - ErrNotCoordinatorForConsumer joining group. retries=[%v]", retries)
 		return c.retryNewSession(ctx, topics, handler, retries, true)
 	case ErrRebalanceInProgress: // retry after backoff
 		if retries <= 0 {
 			return nil, join.Err
 		}
-
+		Logger.Printf("[temp-debug] consumerGroup.newSession - ErrRebalanceInProgress joining group. retries=[%v]", retries)
 		return c.retryNewSession(ctx, topics, handler, retries, false)
 	default:
+		Logger.Printf("[temp-debug] consumerGroup.newSession - Other kafka error. KError=%v", join.Err)
 		return nil, join.Err
 	}
 
 	// Prepare distribution plan if we joined as the leader
 	var plan BalanceStrategyPlan
 	if join.LeaderId == join.MemberId {
+		Logger.Println("[temp-debug] consumerGroup.newSession - leaderID is the memberID. getting members")
 		members, err := join.GetMembers()
 		if err != nil {
+			Logger.Printf("[temp-debug] consumerGroup.newSession - error getting members: %v", err)
 			return nil, err
 		}
 
+		Logger.Printf("[temp-debug] consumerGroup.newSession - got members=%v, creating plan", members)
 		plan, err = c.balance(members)
 		if err != nil {
+			Logger.Printf("[temp-debug] consumerGroup.newSession - error creating balance plan: %v", err)
 			return nil, err
 		}
 	}
 
 	// Sync consumer group
+	Logger.Println("[temp-debug] consumerGroup.newSession - syncing consumer group")
+
 	sync, err := c.syncGroupRequest(coordinator, plan, join.GenerationId)
 	if err != nil {
+		Logger.Printf("[temp-debug] consumerGroup.newSession - error syncing group: %v", err)
 		_ = coordinator.Close()
 		return nil, err
 	}
 	switch sync.Err {
 	case ErrNoError:
+		Logger.Println("[temp-debug] consumerGroup.newSession - successfully synced group")
 	case ErrUnknownMemberId, ErrIllegalGeneration: // reset member ID and retry immediately
 		c.memberID = ""
+		Logger.Printf("[temp-debug] consumerGroup.newSession - ErrUnknownMemberId or ErrIllegalGeneration syncing group. KError=%v", sync.Err)
 		return c.newSession(ctx, topics, handler, retries)
 	case ErrNotCoordinatorForConsumer: // retry after backoff with coordinator refresh
 		if retries <= 0 {
 			return nil, sync.Err
 		}
+		Logger.Printf("[temp-debug] consumerGroup.newSession - ErrNotCoordinatorForConsumer syncing group. retries=[%v]", retries)
 
 		return c.retryNewSession(ctx, topics, handler, retries, true)
 	case ErrRebalanceInProgress: // retry after backoff
 		if retries <= 0 {
 			return nil, sync.Err
 		}
+		Logger.Printf("[temp-debug] consumerGroup.newSession - ErrRebalanceInProgress syncing group. retries=[%v]", retries)
 
 		return c.retryNewSession(ctx, topics, handler, retries, false)
 	default:
+		Logger.Printf("[temp-debug] consumerGroup.newSession - Other kafka error syncing group. KError=%v", sync.Err)
 		return nil, sync.Err
 	}
 
@@ -285,6 +308,8 @@ func (c *consumerGroup) newSession(ctx context.Context, topics []string, handler
 	if len(sync.MemberAssignment) > 0 {
 		members, err := sync.GetMemberAssignment()
 		if err != nil {
+			Logger.Printf("[temp-debug] consumerGroup.newSession - error getting member assignment: %v", err)
+
 			return nil, err
 		}
 		claims = members.Topics
