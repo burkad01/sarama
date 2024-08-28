@@ -1,6 +1,9 @@
 package sarama
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // DescribeAclsResponse is a describe acl response type
 type DescribeAclsResponse struct {
@@ -45,6 +48,9 @@ func (d *DescribeAclsResponse) decode(pd packetDecoder, version int16) (err erro
 	}
 	d.Err = KError(kerr)
 
+	if kerr == -1 {
+		fmt.Println("acl_describe_response: kErr=-1")
+	}
 	errmsg, err := pd.getString()
 	if err != nil {
 		return err

@@ -1,6 +1,7 @@
 package sarama
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -30,6 +31,10 @@ func (f *FindCoordinatorResponse) decode(pd packetDecoder, version int16) (err e
 		return err
 	}
 	f.Err = KError(tmp)
+
+	if tmp == -1 {
+		fmt.Println("find_coordinator_response: kErr=-1")
+	}
 
 	if version >= 1 {
 		if f.ErrMsg, err = pd.getNullableString(); err != nil {

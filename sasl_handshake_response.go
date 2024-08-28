@@ -1,5 +1,7 @@
 package sarama
 
+import "fmt"
+
 type SaslHandshakeResponse struct {
 	Version           int16
 	Err               KError
@@ -18,6 +20,9 @@ func (r *SaslHandshakeResponse) decode(pd packetDecoder, version int16) error {
 	}
 
 	r.Err = KError(kerr)
+	if kerr == -1 {
+		fmt.Println("sasl_handshake_response: kErr=-1")
+	}
 
 	if r.EnabledMechanisms, err = pd.getStringArray(); err != nil {
 		return err

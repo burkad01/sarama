@@ -2,6 +2,7 @@ package sarama
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"time"
 
@@ -76,6 +77,10 @@ func (b *FetchResponseBlock) decode(pd packetDecoder, version int16) (err error)
 		return err
 	}
 	b.Err = KError(tmp)
+
+	if tmp == -1 {
+		fmt.Println("retch_response block: kErr=-1")
+	}
 
 	b.HighWaterMarkOffset, err = pd.getInt64()
 	if err != nil {
@@ -447,6 +452,11 @@ func (r *FetchResponse) AddError(topic string, partition int32, err KError) {
 		frb = new(FetchResponseBlock)
 		partitions[partition] = frb
 	}
+
+	if err == -1 {
+		fmt.Println("fetch_response addError: kErr=-1")
+	}
+
 	frb.Err = err
 }
 

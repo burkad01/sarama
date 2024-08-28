@@ -1,6 +1,9 @@
 package sarama
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type OffsetFetchResponseBlock struct {
 	Offset      int64
@@ -40,6 +43,10 @@ func (b *OffsetFetchResponseBlock) decode(pd packetDecoder, version int16) (err 
 		return err
 	}
 	b.Err = KError(tmp)
+
+	if tmp == -1 {
+		fmt.Println("offset_fetch_response: kErr=-1")
+	}
 
 	if isFlexible {
 		if _, err := pd.getEmptyTaggedFieldArray(); err != nil {
@@ -211,6 +218,10 @@ func (r *OffsetFetchResponse) decode(pd packetDecoder, version int16) (err error
 			return err
 		}
 		r.Err = KError(kerr)
+
+		if kerr == -1 {
+			fmt.Println("offset_fetch_response v2: kErr=-1")
+		}
 	}
 
 	if isFlexible {

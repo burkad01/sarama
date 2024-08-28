@@ -137,6 +137,10 @@ func (t *TopicError) decode(pd packetDecoder, version int16) (err error) {
 	}
 	t.Err = KError(kErr)
 
+	if kErr == -1 {
+		fmt.Println("create_topics_response: kErr=-1")
+	}
+
 	if version >= 1 {
 		if t.ErrMsg, err = pd.getNullableString(); err != nil {
 			return err

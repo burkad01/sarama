@@ -1,6 +1,9 @@
 package sarama
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type HeartbeatResponse struct {
 	Version      int16
@@ -29,6 +32,10 @@ func (r *HeartbeatResponse) decode(pd packetDecoder, version int16) error {
 		return err
 	}
 	r.Err = KError(kerr)
+
+	if kerr == -1 {
+		fmt.Println("heartbeat_response: kErr=-1")
+	}
 
 	return nil
 }

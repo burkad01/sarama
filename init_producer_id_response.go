@@ -1,6 +1,9 @@
 package sarama
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type InitProducerIDResponse struct {
 	ThrottleTime  time.Duration
@@ -36,6 +39,10 @@ func (i *InitProducerIDResponse) decode(pd packetDecoder, version int16) (err er
 		return err
 	}
 	i.Err = KError(kerr)
+
+	if kerr == -1 {
+		fmt.Println("init_producer_id_response: kErr=-1")
+	}
 
 	if i.ProducerID, err = pd.getInt64(); err != nil {
 		return err

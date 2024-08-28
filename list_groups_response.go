@@ -1,5 +1,7 @@
 package sarama
 
+import "fmt"
+
 type ListGroupsResponse struct {
 	Version      int16
 	ThrottleTime int32
@@ -68,6 +70,10 @@ func (r *ListGroupsResponse) decode(pd packetDecoder, version int16) error {
 	}
 
 	r.Err = KError(kerr)
+
+	if kerr == -1 {
+		fmt.Println("list_groups_response: kErr=-1")
+	}
 
 	var n int
 	if r.Version <= 2 {

@@ -1,6 +1,7 @@
 package sarama
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 )
@@ -23,6 +24,10 @@ func (r *ConsumerMetadataResponse) decode(pd packetDecoder, version int16) (err 
 	}
 
 	r.Err = tmp.Err
+
+	if tmp.Err == -1 {
+		fmt.Println("consumer_metadata_response: kErr=-1")
+	}
 
 	r.Coordinator = tmp.Coordinator
 	if tmp.Coordinator == nil {

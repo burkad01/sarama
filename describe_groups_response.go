@@ -1,6 +1,9 @@
 package sarama
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type DescribeGroupsResponse struct {
 	// Version defines the protocol version to use for encode and decode
@@ -154,6 +157,10 @@ func (gd *GroupDescription) decode(pd packetDecoder, version int16) (err error) 
 	}
 
 	gd.Err = KError(gd.ErrorCode)
+
+	if gd.ErrorCode == -1 {
+		fmt.Println("describe_groups_response: kErr=-1")
+	}
 
 	if gd.GroupId, err = pd.getString(); err != nil {
 		return err

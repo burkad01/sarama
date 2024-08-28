@@ -1,6 +1,9 @@
 package sarama
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // CreateAclsResponse is a an acl response creation type
 type CreateAclsResponse struct {
@@ -99,6 +102,10 @@ func (a *AclCreationResponse) decode(pd packetDecoder, version int16) (err error
 		return err
 	}
 	a.Err = KError(kerr)
+
+	if kerr == -1 {
+		fmt.Println("acl_create_resposne: kErr=-1")
+	}
 
 	if a.ErrMsg, err = pd.getNullableString(); err != nil {
 		return err

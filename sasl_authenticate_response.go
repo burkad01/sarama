@@ -1,5 +1,7 @@
 package sarama
 
+import "fmt"
+
 type SaslAuthenticateResponse struct {
 	// Version defines the protocol version to use for encode and decode
 	Version           int16
@@ -31,6 +33,10 @@ func (r *SaslAuthenticateResponse) decode(pd packetDecoder, version int16) error
 	}
 
 	r.Err = KError(kerr)
+
+	if kerr == -1 {
+		fmt.Println("sasl_authenticate_response: kErr=-1")
+	}
 
 	if r.ErrorMessage, err = pd.getNullableString(); err != nil {
 		return err

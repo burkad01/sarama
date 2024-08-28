@@ -1,6 +1,9 @@
 package sarama
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type OffsetResponseBlock struct {
 	Err KError
@@ -20,6 +23,10 @@ func (b *OffsetResponseBlock) decode(pd packetDecoder, version int16) (err error
 		return err
 	}
 	b.Err = KError(tmp)
+
+	if tmp == -1 {
+		fmt.Println("offset_response: kErr=-1")
+	}
 
 	if version == 0 {
 		b.Offsets, err = pd.getInt64Array()

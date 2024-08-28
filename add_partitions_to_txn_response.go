@@ -1,6 +1,7 @@
 package sarama
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -126,6 +127,8 @@ func (p *PartitionError) decode(pd packetDecoder, version int16) (err error) {
 		return err
 	}
 	p.Err = KError(kerr)
-
+	if kerr == -1 {
+		fmt.Println("add_partitions_to_txn: kErr=-1")
+	}
 	return nil
 }

@@ -121,6 +121,10 @@ func (t *TopicPartitionError) decode(pd packetDecoder, version int16) (err error
 	}
 	t.Err = KError(kerr)
 
+	if kerr == -1 {
+		fmt.Println("create_partitions_response: kErr=-1")
+	}
+
 	if t.ErrMsg, err = pd.getNullableString(); err != nil {
 		return err
 	}

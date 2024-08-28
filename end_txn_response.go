@@ -1,6 +1,7 @@
 package sarama
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -28,6 +29,10 @@ func (e *EndTxnResponse) decode(pd packetDecoder, version int16) (err error) {
 		return err
 	}
 	e.Err = KError(kerr)
+
+	if kerr == -1 {
+		fmt.Println("end_txn_response: kErr=-1")
+	}
 
 	return nil
 }

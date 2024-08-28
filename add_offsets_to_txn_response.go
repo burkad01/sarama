@@ -1,6 +1,7 @@
 package sarama
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -29,7 +30,9 @@ func (a *AddOffsetsToTxnResponse) decode(pd packetDecoder, version int16) (err e
 		return err
 	}
 	a.Err = KError(kerr)
-
+	if kerr == -1 {
+		fmt.Println("add_offsets_to_txn: kErr=-1")
+	}
 	return nil
 }
 

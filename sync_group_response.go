@@ -1,6 +1,9 @@
 package sarama
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type SyncGroupResponse struct {
 	// Version defines the protocol version to use for encode and decode
@@ -42,6 +45,9 @@ func (r *SyncGroupResponse) decode(pd packetDecoder, version int16) (err error) 
 	}
 
 	r.Err = KError(kerr)
+	if kerr == -1 {
+		fmt.Println("sync_group_response: kErr=-1")
+	}
 
 	r.MemberAssignment, err = pd.getBytes()
 	return

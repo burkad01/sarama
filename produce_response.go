@@ -35,6 +35,10 @@ func (b *ProduceResponseBlock) decode(pd packetDecoder, version int16) (err erro
 	}
 	b.Err = KError(tmp)
 
+	if tmp == -1 {
+		fmt.Println("produce_response: kErr=-1")
+	}
+
 	b.Offset, err = pd.getInt64()
 	if err != nil {
 		return err

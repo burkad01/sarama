@@ -1,6 +1,9 @@
 package sarama
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type MemberResponse struct {
 	MemberId        string
@@ -49,6 +52,10 @@ func (r *LeaveGroupResponse) decode(pd packetDecoder, version int16) (err error)
 	}
 	r.Err = KError(kerr)
 
+	if kerr == -1 {
+		fmt.Println("leave_group_response: kErr=-1")
+	}
+
 	if r.Version >= 3 {
 		membersLen, err := pd.getArrayLength()
 		if err != nil {
@@ -65,6 +72,11 @@ func (r *LeaveGroupResponse) decode(pd packetDecoder, version int16) (err error)
 			if memberErr, err := pd.getInt16(); err != nil {
 				return err
 			} else {
+
+				if kerr == -1 {
+					fmt.Println("join_group_response memberErr: kErr=-1")
+				}
+
 				r.Members[i].Err = KError(memberErr)
 			}
 		}

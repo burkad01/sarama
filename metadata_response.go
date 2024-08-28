@@ -1,6 +1,9 @@
 package sarama
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // PartitionMetadata contains each partition in the topic.
 type PartitionMetadata struct {
@@ -29,6 +32,10 @@ func (p *PartitionMetadata) decode(pd packetDecoder, version int16) (err error) 
 		return err
 	}
 	p.Err = KError(tmp)
+
+	if tmp == -1 {
+		fmt.Println("metadata_response partition: kErr=-1")
+	}
 
 	if p.ID, err = pd.getInt32(); err != nil {
 		return err
@@ -154,6 +161,10 @@ func (t *TopicMetadata) decode(pd packetDecoder, version int16) (err error) {
 		return err
 	}
 	t.Err = KError(tmp)
+
+	if tmp == -1 {
+		fmt.Println("metadata_response topicMetadata: kErr=-1")
+	}
 
 	if t.Version < 9 {
 		t.Name, err = pd.getString()
@@ -501,6 +512,11 @@ func (r *MetadataResponse) AddTopic(topic string, err KError) *TopicMetadata {
 foundTopic:
 
 	tmatch.Err = err
+
+	if err == -1 {
+		fmt.Println("metadata_response addTopic: kErr=-1")
+	}
+
 	return tmatch
 }
 
@@ -534,4 +550,9 @@ foundPartition:
 		pmatch.OfflineReplicas = []int32{}
 	}
 	pmatch.Err = err
+
+	if err == -1 {
+		fmt.Println("metadata_response addTopicPartition: kErr=-1")
+	}
+
 }

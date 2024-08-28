@@ -1,6 +1,7 @@
 package sarama
 
 import (
+	"fmt"
 	"sort"
 	"time"
 )
@@ -170,6 +171,10 @@ func (t *DeleteRecordsResponsePartition) decode(pd packetDecoder, version int16)
 		return err
 	}
 	t.Err = KError(kErr)
+
+	if kErr == -1 {
+		fmt.Println("delete_records_response: kErr=-1")
+	}
 
 	return nil
 }
