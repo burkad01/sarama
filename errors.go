@@ -265,6 +265,36 @@ const (
 	ErrUnstableOffsetCommit               KError = 88 // Errors.UNSTABLE_OFFSET_COMMIT
 	ErrThrottlingQuotaExceeded            KError = 89 // Errors.THROTTLING_QUOTA_EXCEEDED
 	ErrProducerFenced                     KError = 90 // Errors.PRODUCER_FENCED
+	ErrResourceNotFound KError=91 // Errors.RESOURCE_NOT_FOUND
+	ErrDuplicateResource KError=92 // Errors.DUPLICATE_RESOURCE
+	ErrUnacceptableCredential KError=93 // Errors.UNACCEPTABLE_CREDENTIAL
+	ErrInconsistentVoterSet KError=94 // Errors.INCONSISTENT_VOTER_SET
+	ErrInvalidUpdateVersion KError=95 // Errors.INVALID_UPDATE_VERSION
+	ErrFeatureUpdateFailed KError=96 // Errors.FEATURE_UPDATE_FAILED
+	ErrPrincipalDeserializationFailure KError=97 // Errors.PRINCIPAL_DESERIALIZATION_FAILURE
+	ErrSnapshotNotFound KError=98 // Errors.SNAPSHOT_NOT_FOUND
+	ErrPositionOutOfRange KError=99 // Errors.POSITION_OUT_OF_RANGE
+	ErrUnknownTopicID KError=100 // Errors.UNKNOWN_TOPIC_ID
+	ErrDuplicateBrokerRegistration KError=101 // Errors.DUPLICATE_BROKER_REGISTRATION
+	ErrBrokerIDNotRegsitered KError=102 // Errors.BROKER_ID_NOT_REGISTERED
+	ErrInconsistentTopicID KError=103 // Errors.INCONSISTENT_TOPIC_ID
+	ErrInconsistentClusterID KError=104 // Errors.INCONSISTENT_CLUSTER_ID
+	ErrTransactionalIDNotFound KError=105 // Errors.TRANSACTIONAL_ID_NOT_FOUND
+	ErrFetchSessionTopicIDError KError=106 // Errors.FETCH_SESSION_TOPIC_ID_ERROR
+	ErrIneligibleReplica KError=107 // Errors.INELIGIBLE_REPLICA
+	ErrNewLeaderElected KError=108 // Errors.NEW_LEADER_ELECTED
+	ErrOffsetMovedToTieredStorage KError=109 // Errors.OFFSET_MOVED_TO_TIERED_STORAGE
+	ErrFencedMemberEpoch KError=110 // Errors.FENCED_MEMBER_EPOCH
+	ErrUnreleasedInstanceID KError=111 // Errors.UNRELEASED_INSTANCE_ID
+	ErrUnsupportedAssignor KError=112 // Errors.UNSUPPORTED_ASSIGNOR
+	ErrStaleMemberEpoch KError=113 // Errors.STALE_MEMBER_EPOCH
+	ErrMismatchedEndpointType KError=114 // Errors.MISMATCHED_ENDPOINT_TYPE
+	ErrUnsupportedEndpointType KError=115 // Errors.UNSUPPORTED_ENDPOINT_TYPE
+	ErrUnknownControllerID KError=116 // Errors.UNKNOWN_CONTROLLER_ID
+	ErrUnknownSubscriptionID KError=117 // Errors.UNKNOWN_SUBSCRIPTION_ID
+	ErrTelemetryTooLarge KError=118 // Errors.TELEMETRY_TOO_LARGE
+	ErrInvalidRegistration KError=119 // Errors.INVALID_REGISTRATION
+	ErrTransactionAbortable KError=120 // Errors.TRANSACTION_ABORTABLE
 )
 
 func (err KError) Error() string {
@@ -451,6 +481,8 @@ func (err KError) Error() string {
 		return "kafka server: This record has failed the validation on broker and hence will be rejected"
 	case ErrUnstableOffsetCommit:
 		return "kafka server: There are unstable offsets that need to be cleared"
+	default: 
+		return fmt.Sprintf("Unknown error, how did this happen? Error code = %d", err)
 	}
 
 	return fmt.Sprintf("Unknown error, how did this happen? Error code = %d", err)
