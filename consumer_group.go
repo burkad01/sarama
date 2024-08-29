@@ -275,6 +275,7 @@ func (c *consumerGroup) newSession(ctx context.Context, topics []string, handler
 			return nil, err
 		}
 
+		fmt.Printf("newSession[retries=%d]: Error getting coordinator: %v\n", retries, err)
 		return c.retryNewSession(ctx, topics, handler, retries, true)
 	}
 
@@ -303,6 +304,9 @@ func (c *consumerGroup) newSession(ctx context.Context, topics []string, handler
 		if consumerGroupJoinFailed != nil {
 			consumerGroupJoinFailed.Inc(1)
 		}
+
+		fmt.Printf("newSession[retries=%d]: Error join group request: %v.\n", retries, err)
+
 		return nil, err
 	}
 	if !errors.Is(join.Err, ErrNoError) {
@@ -316,12 +320,14 @@ func (c *consumerGroup) newSession(ctx context.Context, topics []string, handler
 	case ErrUnknownMemberId, ErrIllegalGeneration:
 		// reset member ID and retry immediately
 		c.memberID = ""
+		fmt.Printf("newSession[retries=%d]: Error join.Err: %v.\n", retries, join.Err)
 		return c.newSession(ctx, topics, handler, retries)
 	case ErrNotCoordinatorForConsumer, ErrRebalanceInProgress, ErrOffsetsLoadInProgress:
 		// retry after backoff
 		if retries <= 0 {
 			return nil, join.Err
 		}
+		fmt.Printf("newSession[retries=%d]: Error join.Err: %v.\n", retries, join.Err)
 		return c.retryNewSession(ctx, topics, handler, retries, true)
 	case ErrMemberIdRequired:
 		// from JoinGroupRequest v4 onwards (due to KIP-394) if the client starts
@@ -329,13 +335,16 @@ func (c *consumerGroup) newSession(ctx context.Context, topics []string, handler
 		// response and send another join request with that id to actually join the
 		// group
 		c.memberID = join.MemberId
+		fmt.Printf("newSession[retries=%d]: Error join.Err: %v.\n", retries, join.Err)
 		return c.newSession(ctx, topics, handler, retries)
 	case ErrFencedInstancedId:
 		if c.groupInstanceId != nil {
 			Logger.Printf("JoinGroup failed: group instance id %s has been fenced\n", *c.groupInstanceId)
 		}
+		fmt.Printf("newSession[retries=%d]: Error join.Err: %v.\n", retries, join.Err)
 		return nil, join.Err
 	default:
+		fmt.Printf("newSession[retries=%d]: Error join.Err (default case): %v.\n", retries, join.Err)
 		return nil, join.Err
 	}
 
@@ -361,10 +370,17 @@ func (c *consumerGroup) newSession(ctx context.Context, topics []string, handler
 			return nil, err
 		}
 
+		startBalance := time.Now()
+		fmt.Printf("LEADER: newSession[retries=%d]. len(members)=%d\n", retries, len(members))
 		allSubscribedTopicPartitions, allSubscribedTopics, plan, err = c.balance(strategy, members)
 		if err != nil {
+			fmt.Printf("LEADER: newSession[retries=%d]: Error balancing %v\n", retries, err)
 			return nil, err
 		}
+
+		fmt.Printf("LEADER: newSession[retries=%d]. rebalance took %v\n", retries, time.Since(startBalance))
+	} else {
+		fmt.Printf("newSession[retries=%d]: Not leader: \n", retries)
 	}
 
 	// Sync consumer group
@@ -589,22 +605,39 @@ func (c *consumerGroup) balance(strategy BalanceStrategy, members map[string]Con
 		allSubscribedTopics = append(allSubscribedTopics, topic)
 	}
 
+	refreshMetadataStart := time.Now()
 	// refresh metadata for all the subscribed topics in the consumer group
 	// to avoid using stale metadata to assigning partitions
 	err := c.client.RefreshMetadata(allSubscribedTopics...)
 	if err != nil {
+		fmt.Printf("balance() error refreshMetadata: %v\n", err)
 		return nil, nil, nil, err
 	}
+
+	fmt.Printf("balance() refreshMetadata took %v\n", time.Since(refreshMetadataStart))
+
+	partitionRetrievesStart := time.Now()
+	var (
+		topicCount          int
+		totalPartitionCount int
+	)
 
 	for topic := range topicPartitions {
 		partitions, err := c.client.Partitions(topic)
 		if err != nil {
+			fmt.Printf("balance() error getting topic partitions for %s: %v\n", topic, err)
 			return nil, nil, nil, err
 		}
 		topicPartitions[topic] = partitions
+		topicCount++
+		totalPartitionCount += len(partitions)
 	}
 
+	fmt.Printf("balance() retrieve partitions took %v. topicCount=%d, totalPartitionCount=%d\n", time.Since(partitionRetrievesStart), topicCount, totalPartitionCount)
+
+	planStart := time.Now()
 	plan, err := strategy.Plan(members, topicPartitions)
+	fmt.Printf("balance() plan took %v \n", time.Since(planStart))
 	return topicPartitions, allSubscribedTopics, plan, err
 }
 
