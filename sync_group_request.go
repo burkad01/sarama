@@ -1,5 +1,7 @@
 package sarama
 
+import "fmt"
+
 type SyncGroupRequestAssignment struct {
 	// MemberId contains the ID of the member to assign.
 	MemberId string
@@ -158,6 +160,7 @@ func (r *SyncGroupRequest) AddGroupAssignmentMember(
 		return err
 	}
 
+	fmt.Printf("adding group assignment for member=%s. Assignment bytes len=%d\n", memberId, len(bin))
 	r.AddGroupAssignment(memberId, bin)
 	return nil
 }
