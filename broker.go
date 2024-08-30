@@ -559,6 +559,7 @@ func (b *Broker) SyncGroup(request *SyncGroupRequest) (*SyncGroupResponse, error
 
 	err := b.sendAndReceive(request, response)
 	if err != nil {
+		fmt.Printf("syncgroup sendReceive Err=%v", err)
 		return nil, err
 	}
 
@@ -1013,6 +1014,11 @@ func (b *Broker) sendInternal(rb protocolBody, promise *responsePromise) error {
 	requestTime := time.Now()
 	// Will be decremented in responseReceiver (except error or request with NoResponse)
 	b.addRequestInFlightMetrics(1)
+
+	if _, ok := rb.(*SyncGroupRequest); ok {
+		fmt.Printf("len(SyncGroupRequest)=%v\n", len(buf))
+	}
+
 	bytes, err := b.write(buf)
 	b.updateOutgoingCommunicationMetrics(bytes)
 	b.updateProtocolMetrics(rb)
