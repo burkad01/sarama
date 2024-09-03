@@ -1051,6 +1051,8 @@ func (b *Broker) sendAndReceive(req protocolBody, res protocolBody) error {
 
 	promise, err := b.send(req, res != nil, responseHeaderVersion)
 	if err != nil {
+
+		fmt.Printf("[sendAndReceive] send error: %v. reqKey=%v, reqVersion=%v, reqHeaderVersion=%v\n", err, req.key(), req.version(), req.headerVersion())
 		return err
 	}
 
@@ -1060,6 +1062,7 @@ func (b *Broker) sendAndReceive(req protocolBody, res protocolBody) error {
 
 	err = handleResponsePromise(req, res, promise, b.metricRegistry)
 	if err != nil {
+		fmt.Printf("[sendAndReceive] send handleResponsePromiseErr: %v. reqKey=%v, reqVersion=%v, reqHeaderVersion=%v\n", err, req.key(), req.version(), req.headerVersion())
 		return err
 	}
 	if res != nil {
@@ -1073,6 +1076,7 @@ func handleResponsePromise(req protocolBody, res protocolBody, promise *response
 	case buf := <-promise.packets:
 		return versionedDecode(buf, res, req.version(), metricRegistry)
 	case err := <-promise.errors:
+		fmt.Printf("[sendAndReceive] promise error: %v.\n", err)
 		return err
 	}
 }

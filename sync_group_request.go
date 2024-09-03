@@ -23,10 +23,12 @@ func (a *SyncGroupRequestAssignment) encode(pe packetEncoder, version int16) (er
 
 func (a *SyncGroupRequestAssignment) decode(pd packetDecoder, version int16) (err error) {
 	if a.MemberId, err = pd.getString(); err != nil {
+		fmt.Printf("[syncGroupRequestAssignment] decode MemberId getString error: %v\n", err)
 		return err
 	}
 
 	if a.Assignment, err = pd.getBytes(); err != nil {
+		fmt.Printf("[syncGroupRequestAssignment] decode Assignment getBytes error: %v\n", err)
 		return err
 	}
 
@@ -80,19 +82,23 @@ func (s *SyncGroupRequest) encode(pe packetEncoder) (err error) {
 func (s *SyncGroupRequest) decode(pd packetDecoder, version int16) (err error) {
 	s.Version = version
 	if s.GroupId, err = pd.getString(); err != nil {
+		fmt.Printf("[syncGroupRequest] decode groupID getString error: %v\n", err)
 		return err
 	}
 
 	if s.GenerationId, err = pd.getInt32(); err != nil {
+		fmt.Printf("[syncGroupRequest] decode getInt32 error: %v\n", err)
 		return err
 	}
 
 	if s.MemberId, err = pd.getString(); err != nil {
+		fmt.Printf("[syncGroupRequest] decode MemberId getString error: %v\n", err)
 		return err
 	}
 
 	if s.Version >= 3 {
 		if s.GroupInstanceId, err = pd.getNullableString(); err != nil {
+			fmt.Printf("[syncGroupRequest] decode GroupInstanceId getNullableString error: %v\n", err)
 			return err
 		}
 	}
@@ -104,6 +110,7 @@ func (s *SyncGroupRequest) decode(pd packetDecoder, version int16) (err error) {
 		for i := 0; i < numAssignments; i++ {
 			var block SyncGroupRequestAssignment
 			if err := block.decode(pd, s.Version); err != nil {
+				fmt.Printf("[syncGroupRequest] decode block decode error: %v. i=%d version=%v\n", err, i, s.Version)
 				return err
 			}
 			s.GroupAssignments[i] = block
