@@ -36,11 +36,13 @@ func (r *SyncGroupResponse) decode(pd packetDecoder, version int16) (err error) 
 	r.Version = version
 	if r.Version >= 1 {
 		if r.ThrottleTime, err = pd.getInt32(); err != nil {
+			fmt.Printf("[SyncGroupResponse] decode throttle getInt32() error: %v\n", err)
 			return err
 		}
 	}
 	kerr, err := pd.getInt16()
 	if err != nil {
+		fmt.Printf("[SyncGroupResponse] decode getInt16() error: %v\n", err)
 		return err
 	}
 
@@ -50,6 +52,12 @@ func (r *SyncGroupResponse) decode(pd packetDecoder, version int16) (err error) 
 	}
 
 	r.MemberAssignment, err = pd.getBytes()
+
+	if kerr == -1 {
+		fmt.Printf("[SyncGroupResponse] r.MemberAssignment=%v err=%v\n", r.MemberAssignment, err)
+		fmt.Printf("[SyncGroupResponse] r.MemberAssignment as string=%s", string(r.MemberAssignment))
+	}
+
 	return
 }
 
