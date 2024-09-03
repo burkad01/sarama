@@ -89,6 +89,7 @@ func versionedDecode(buf []byte, in versionedDecoder, version int16, metricRegis
 	}
 	err := in.decode(&helper, version)
 	if err != nil {
+		fmt.Printf("[versionedDecode] decode error: %v\n", err)
 		return err
 	}
 
